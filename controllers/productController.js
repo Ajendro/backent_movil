@@ -1,5 +1,9 @@
 const Product = require('../models/productModel');
 const cloudinary = require('../config/cloudinary');
+const mongoose = require('mongoose');
+
+const { sendResponse } = require('../services/respuesta');
+
 
 const uploadImageToCloudinary = async (imagePath) => {
     try {
@@ -10,6 +14,7 @@ const uploadImageToCloudinary = async (imagePath) => {
     }
 };
 
+// Crear Producto
 exports.createProduct = async (req, res) => {
     try {
         const { name, description, price, fk_category_product, fk_user } = req.body;
@@ -20,7 +25,7 @@ exports.createProduct = async (req, res) => {
         }
 
         if (!fk_user) {
-            return res.status(400).json({ mensaje: 'ID de usuario no proporcionado' });
+            return sendResponse(res, 400, 'ID de usuario no proporcionado', null, false);
         }
 
         const newProduct = new Product({
@@ -33,20 +38,21 @@ exports.createProduct = async (req, res) => {
         });
 
         await newProduct.save();
-        res.status(201).json({ mensaje: 'Producto creado exitosamente', producto: newProduct });
+        return sendResponse(res, 201, 'Producto creado exitosamente', { idTransaction: newProduct._id }, true);
     } catch (error) {
-        res.status(500).json({ mensaje: 'No se pudo crear el producto: Error interno del servidor', error: error.message });
+        return sendResponse(res, 500, 'No se pudo crear el producto: Error interno del servidor', null, false);
     }
 };
 
+// Obtener Todos los Productos
 exports.getProducts = async (req, res) => {
     try {
         const { fk_category_product } = req.query;
         const filter = fk_category_product ? { fk_category_product } : {};
         const products = await Product.find(filter);
-        res.status(200).json(products);
+        return sendResponse(res, 200, 'Productos obtenidos exitosamente', { products }, true);
     } catch (error) {
-        res.status(500).json({ mensaje: 'Error al obtener productos', error: error.message });
+        return sendResponse(res, 500, 'Error al obtener productos', null, false);
     }
 };
 
@@ -55,11 +61,11 @@ exports.getProductById = async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
         if (!product) {
-            return res.status(404).json({ mensaje: 'Producto no encontrado' });
+            return sendResponse(res, 404, 'Producto no encontrado', null, false);
         }
-        res.status(200).json(product);
+        return sendResponse(res, 200, 'Producto encontrado exitosamente', { product }, true);
     } catch (error) {
-        res.status(500).json({ mensaje: 'Error al obtener producto por ID', error: error.message });
+        return sendResponse(res, 500, 'Error al obtener producto por ID', null, false);
     }
 };
 
@@ -76,32 +82,57 @@ exports.updateProduct = async (req, res) => {
 
         const updatedProduct = await Product.findByIdAndUpdate(id, updateData, { new: true });
         if (!updatedProduct) {
-            return res.status(404).json({ mensaje: 'Producto no encontrado' });
+            return sendResponse(res, 404, 'Producto no encontrado', null, false);
         }
-        res.status(200).json({ mensaje: 'Producto actualizado exitosamente', producto: updatedProduct });
+        return sendResponse(res, 200, 'Producto actualizado exitosamente', { product: updatedProduct }, true);
     } catch (error) {
-        res.status(500).json({ mensaje: 'No se pudo actualizar el producto: Error interno del servidor', error: error.message });
+        return sendResponse(res, 500, 'No se pudo actualizar el producto: Error interno del servidor', null, false);
     }
 };
 
+// Eliminar Producto
 exports.deleteProduct = async (req, res) => {
     try {
         const deletedProduct = await Product.findByIdAndDelete(req.params.id);
         if (!deletedProduct) {
-            return res.status(404).json({ mensaje: 'Producto no encontrado' });
+            return sendResponse(res, 404, 'Producto no encontrado', null, false);
         }
-        res.status(200).json({ mensaje: 'Producto eliminado exitosamente' });
+        return sendResponse(res, 200, 'Producto eliminado exitosamente', { idTransaction: deletedProduct._id }, true);
     } catch (error) {
-        res.status(500).json({ mensaje: 'No se pudo eliminar el producto: Error interno del servidor', error: error.message });
+        return sendResponse(res, 500, 'No se pudo eliminar el producto: Error interno del servidor', null, false);
     }
 };
 
 exports.getProductsByUserId = async (req, res) => {
     try {
-        const { userId } = req.params;
-        const products = await Product.find({ fk_user: userId });
-        res.status(200).json(products);
+        const { id } = req.params;
+
+        // Verificar que el userId es válido
+        if (!id) {
+            return sendResponse(res, 400, 'ID de usuario no proporcionado', null, false);
+        }
+
+        // Convertir userId a ObjectId usando 'new'
+        const userObjectId = new mongoose.Types.ObjectId(id);
+
+        // Log para verificar el valor de userId
+        console.log('Buscando productos para el usuario con ID:', userObjectId);
+
+        // Buscar los productos que corresponden al usuario
+        const products = await Product.find({ fk_user: userObjectId });
+
+        // Verificar si hay productos
+        console.log('Productos encontrados:', products);
+
+        if (products.length === 0) {
+            return sendResponse(res, 200, 'No se encontraron productos para este usuario', { products }, true);
+        }
+
+        return sendResponse(res, 200, 'Productos obtenidos por ID de usuario', { products }, true);
     } catch (error) {
-        res.status(500).json({ mensaje: 'Error al obtener productos por ID de usuario', error: error.message });
+        console.error('Error al obtener productos por ID de usuario:', error);
+        return sendResponse(res, 500, 'Error al obtener productos por ID de usuario', null, false);
     }
 };
+
+

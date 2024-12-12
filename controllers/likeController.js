@@ -1,196 +1,153 @@
 const mongoose = require('mongoose');
 const Like = require('../models/likeModel');
+const { sendResponse } = require('../services/respuesta');
 
+
+// Crear Like
 exports.createLike = async (req, res) => {
     try {
-        const { 
-            like, 
-            dislike, 
-            fk_user, 
-            fk_post 
-        } = req.body;
+        const { like, dislike, fk_user, fk_post } = req.body;
 
         if (like === undefined || dislike === undefined || !fk_user || !fk_post) {
-            return res.status(400).json({ 
-                error: 'Todos los campos son requeridos' 
-            });
+            return sendResponse(res, 400, 'Todos los campos son requeridos', null, false);
         }
 
-        if (!mongoose.Types.ObjectId.isValid(fk_user) || 
-            !mongoose.Types.ObjectId.isValid(fk_post)) {
-            return res.status(400).json({ 
-                error: 'ID de usuario o post inválido' 
-            });
+        if (!mongoose.Types.ObjectId.isValid(fk_user) || !mongoose.Types.ObjectId.isValid(fk_post)) {
+            return sendResponse(res, 400, 'ID de usuario o post inválido', null, false);
         }
+
         const newLike = new Like({
             like,
             dislike,
-            like_date: new Date(), 
+            like_date: new Date(),
             fk_user,
             fk_post
         });
 
         const like_record = await newLike.save();
-        res.status(201).json({ 
-            message: 'Like creado exitosamente', 
-            like: like_record 
-        });
+        sendResponse(res, 201, 'Like creado exitosamente', { likeId: like_record._id }, true);
     } catch (err) {
         console.error('Error creando el like:', err);
-        res.status(500).json({ 
-            error: 'Error al crear el like', 
-            details: err.message 
-        });
+        sendResponse(res, 500, 'Error al crear el like', null, false);
     }
 };
 
+// Obtener Likes
 exports.getLikes = async (req, res) => {
     try {
         const likes = await Like.find()
             .populate('fk_user', 'name')
             .populate('fk_post', 'title');
 
-        res.status(200).json({
-            message: 'Likes obtenidos exitosamente',
-            count: likes.length,
-            likes
-        });
+        sendResponse(res, 200, 'Likes obtenidos exitosamente', { likes }, true);
     } catch (error) {
         console.error('Error al obtener likes:', error);
-        res.status(500).json({ 
-            error: 'Error al obtener likes', 
-            details: error.message 
-        });
+        sendResponse(res, 500, 'Error al obtener likes', null, false);
     }
 };
 
+// Obtener Like por ID
 exports.getLikeById = async (req, res) => {
     try {
-        const { id } = req.body;
+        const { id } = req.params;
+
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ 
-                error: 'ID de like inválido' 
-            });
+            return sendResponse(res, 400, 'ID de like inválido', null, false);
         }
+
         const like = await Like.findById(id)
             .populate('fk_user', 'name')
             .populate('fk_post', 'title');
 
         if (!like) {
-            return res.status(404).json({ 
-                error: 'Like no encontrado' 
-            });
+            return sendResponse(res, 404, 'Like no encontrado', null, false);
         }
 
-        res.status(200).json({
-            message: 'Like obtenido exitosamente',
-            like
-        });
+        sendResponse(res, 200, 'Like obtenido exitosamente', { like }, true);
     } catch (error) {
         console.error('Error al obtener like por ID:', error);
-        res.status(500).json({ 
-            error: 'Error al obtener like', 
-            details: error.message 
-        });
+        sendResponse(res, 500, 'Error al obtener like', null, false);
     }
 };
 
+// Actualizar Like
 exports.updateLike = async (req, res) => {
     try {
         const { id, like, dislike, fk_user, fk_post } = req.body;
+
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ 
-                error: 'ID de like inválido' 
-            });
+            return sendResponse(res, 400, 'ID de like inválido', null, false);
         }
+
         const updateData = {};
         if (like !== undefined) updateData.like = like;
         if (dislike !== undefined) updateData.dislike = dislike;
         if (fk_user) updateData.fk_user = fk_user;
         if (fk_post) updateData.fk_post = fk_post;
         updateData.like_date = new Date();
-        const updatedLike = await Like.findByIdAndUpdate(
-            id, 
-            updateData, 
-            { 
-                new: true, 
-                runValidators: true 
-            }
-        ).populate('fk_user', 'name')
-         .populate('fk_post', 'title');
+
+        const updatedLike = await Like.findByIdAndUpdate(id, updateData, { new: true, runValidators: true })
+            .populate('fk_user', 'name')
+            .populate('fk_post', 'title');
 
         if (!updatedLike) {
-            return res.status(404).json({ 
-                error: 'Like no encontrado' 
-            });
+            return sendResponse(res, 404, 'Like no encontrado', null, false);
         }
 
-        res.status(200).json({
-            message: 'Like actualizado exitosamente',
-            like: updatedLike
-        });
+        sendResponse(res, 200, 'Like actualizado exitosamente', { like: updatedLike }, true);
     } catch (error) {
         console.error('Error al actualizar like:', error);
-        res.status(500).json({ 
-            error: 'Error al actualizar el like', 
-            details: error.message 
-        });
+        sendResponse(res, 500, 'Error al actualizar el like', null, false);
     }
 };
 
+// Eliminar Like
 exports.deleteLike = async (req, res) => {
     try {
         const { id } = req.body;
+
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ 
-                error: 'ID de like inválido' 
-            });
+            return sendResponse(res, 400, 'ID de like inválido', null, false);
         }
 
         const deletedLike = await Like.findByIdAndDelete(id);
 
         if (!deletedLike) {
-            return res.status(404).json({ 
-                error: 'Like no encontrado' 
-            });
+            return sendResponse(res, 404, 'Like no encontrado', null, false);
         }
 
-        res.status(200).json({ 
-            message: 'Like eliminado exitosamente',
-            like: deletedLike
-        });
+        sendResponse(res, 200, 'Like eliminado exitosamente', { likeId: deletedLike._id }, true);
     } catch (error) {
         console.error('Error al eliminar like:', error);
-        res.status(500).json({ 
-            error: 'Error al eliminar el like', 
-            details: error.message 
-        });
+        sendResponse(res, 500, 'Error al eliminar el like', null, false);
     }
 };
 
 exports.getLikesByPost = async (req, res) => {
     try {
-        const { fk_post } = req.body;
-        if (!mongoose.Types.ObjectId.isValid(fk_post)) {
-            return res.status(400).json({ 
-                error: 'ID de post inválido' 
-            });
+        const { id } = req.params;
+
+        // Verificar que el id del post es válido
+        if (!id) {
+            return sendResponse(res, 400, 'ID del post no proporcionado', null, false);
         }
 
-        const likes = await Like.find({ fk_post })
-            .populate('fk_user', 'name')
-            .populate('fk_post', 'title');
+        // Convertir id a ObjectId usando 'new'
+        const postObjectId = new mongoose.Types.ObjectId(id);
 
-        res.status(200).json({
-            message: 'Likes del post obtenidos exitosamente',
-            count: likes.length,
-            likes
-        });
+        // Buscar los likes que corresponden al post
+        const likes = await Like.find({ fk_post: postObjectId });
+
+        // Verificar si hay likes
+        console.log('Likes encontrados:', likes);
+
+        if (likes.length === 0) {
+            return sendResponse(res, 200, 'No se encontraron likes para este post', { likes }, true);
+        }
+
+        return sendResponse(res, 200, 'Likes obtenidos por ID de post', { likes }, true);
     } catch (error) {
-        console.error('Error al obtener likes por post:', error);
-        res.status(500).json({ 
-            error: 'Error al obtener likes del post', 
-            details: error.message 
-        });
+        console.error('Error al obtener los likes por ID del post:', error);
+        return sendResponse(res, 500, 'Error al obtener los likes por ID del post', null, false);
     }
 };
