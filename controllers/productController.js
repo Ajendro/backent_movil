@@ -4,7 +4,6 @@ const mongoose = require('mongoose');
 
 const { sendResponse } = require('../services/respuesta');
 
-
 const uploadImageToCloudinary = async (imagePath) => {
     try {
         const result = await cloudinary.uploader.upload(imagePath);

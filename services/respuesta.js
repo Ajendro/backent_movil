@@ -1,11 +1,11 @@
-const sendResponse = (res, statusCode, info, result, status) => {
-    const code = status ? "COD_OK" : "COD_ERROR";
+const sendResponse = (res, statusCode, info, result = null, success = true) => {
+    const code = success ? "COD_OK" : "COD_ERROR";  
     const response = {
         code,       
-        result,     
-        info,        
-        status       
+        result,      
+        info         
     };
+
     res.status(statusCode).json(response);
 };
 

@@ -1,9 +1,9 @@
 const Post = require('../models/postModel');
+const User = require('../models/userModel');
 const cloudinary = require('../config/cloudinary');
 const mongoose = require('mongoose');
 const { sendResponse } = require('../services/respuesta');
 
-// Función para subir imagen a Cloudinary
 const uploadImageToCloudinary = async (imagePath) => {
     try {
         const result = await cloudinary.uploader.upload(imagePath);
@@ -13,7 +13,6 @@ const uploadImageToCloudinary = async (imagePath) => {
     }
 };
 
-// Crear publicación
 exports.createPost = async (req, res) => {
     try {
         const { name, description, post_type, post_date, fk_user, fk_location } = req.body;
@@ -22,13 +21,9 @@ exports.createPost = async (req, res) => {
         if (req.file) {
             imageUrl = await uploadImageToCloudinary(req.file.path);
         }
-
-        // Validar que los campos fk_user y fk_location estén presentes
         if (!fk_user || !fk_location) {
             return sendResponse(res, 400, 'ID de usuario y ubicación son obligatorios', null, false);
         }
-
-        // Crear nueva publicación
         const newPost = new Post({
             name,
             description,
@@ -38,8 +33,6 @@ exports.createPost = async (req, res) => {
             fk_user,
             fk_location
         });
-
-        // Guardar la nueva publicación
         await newPost.save();
         return sendResponse(res, 201, 'Publicación creada exitosamente', { publicacion: newPost }, true);
     } catch (error) {
@@ -48,20 +41,35 @@ exports.createPost = async (req, res) => {
     }
 };
 
-// Obtener todas las publicaciones
-exports.getPosts = async (req, res) => {
+
+exports.getPostsByUserLocation = async (req, res) => {
     try {
-        const { post_type } = req.query;
-        const filter = post_type ? { post_type } : {};
-        const posts = await Post.find(filter);
+        const userId = req.user.id; 
+        const user = await User.findById(userId).populate('fk_location');
+        if (!user) {
+            return sendResponse(res, 404, 'Usuario no encontrado', null, false);
+        }
+
+        const userLocationId = user.fk_location?._id;
+        if (!userLocationId) {
+            return sendResponse(res, 400, 'El usuario no tiene una dirección asociada', null, false);
+        }
+        const posts = await Post.find({ fk_location: userLocationId })
+            .populate({
+                path: 'fk_location',
+                select: 'main_street secondary_street fk_city fk_province'
+            })
+            .populate({
+                path: 'fk_user',
+                select: 'name email'
+            });
         return sendResponse(res, 200, 'Publicaciones obtenidas exitosamente', { posts }, true);
     } catch (error) {
-        console.error('Error al obtener publicaciones:', error);
-        return sendResponse(res, 500, 'Error al obtener publicaciones', null, false);
+        console.error('Error al obtener publicaciones por ubicación del usuario:', error);
+        return sendResponse(res, 500, 'Error interno del servidor', null, false);
     }
 };
 
-// Obtener publicación por ID
 exports.getPostById = async (req, res) => {
     try {
         const post = await Post.findById(req.params.id);
@@ -75,13 +83,11 @@ exports.getPostById = async (req, res) => {
     }
 };
 
-// Actualizar publicación
 exports.updatePost = async (req, res) => {
     try {
         const { id } = req.params;
         let updateData = req.body;
 
-        // Si se sube una nueva imagen, se agrega la URL de la imagen
         if (req.file) {
             const imageUrl = await uploadImageToCloudinary(req.file.path);
             updateData = { ...updateData, imageUrl };
@@ -98,7 +104,6 @@ exports.updatePost = async (req, res) => {
     }
 };
 
-// Eliminar publicación
 exports.deletePost = async (req, res) => {
     try {
         const deletedPost = await Post.findByIdAndDelete(req.params.id);
