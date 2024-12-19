@@ -11,6 +11,7 @@ const communityController = require('../controllers/communityController');
 const categoryController = require('../controllers/categoryController');
 const loginController = require('../controllers/loginController');
 const authenticationController = require('../controllers/authenticationController');
+const { forgotPassword, resetPassword } = require('../controllers/resetpasswordController');
 
 // APIs de autenticación
 router.post('/auth/update-password', authenticationController.updatePassword); // Actualizar contraseña
@@ -68,5 +69,10 @@ router.post('/categories/all', categoryController.getCategories); // Obtener tod
 router.post('/categories/getById/:id', categoryController.getCategoryById); // Obtener una categoría por ID
 router.post('/categories/update/:id', verifyToken, categoryController.updateCategory); // Actualizar una categoría por ID
 router.post('/categories/delete/:id', verifyToken, categoryController.deleteCategory); // Eliminar una categoría por ID
+router.post('/create_all', verifyToken, categoryController.createMultipleCategories); // Crea todas las categorias 
+
+// APIs de Reseteo de Contraseña
+router.post('/forgot-password',forgotPassword); // Solicitar el receteo de contraseña
+router.post('/resetpassword', resetPassword); // Resetear contraseña    
 
 module.exports = router;
