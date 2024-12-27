@@ -14,19 +14,19 @@ exports.loginUser = async (req, res) => {
 
         // Validar entrada
         if (!email || !password) {
-            return sendResponse(res, 400, 'Email y contraseña son requeridos');
+            return sendResponse(res, 400, 'Email y contraseña son requeridos', null, false);
         }
 
         // Buscar el email en la base de datos
         const auth = await Authentication.findOne({ email }).populate('user');
         if (!auth) {
-            return sendResponse(res, 401, 'Credenciales inválidas: Usuario no encontrado');
+            return sendResponse(res, 401, 'Credenciales inválidas: Usuario no encontrado', null, false);
         }
 
         // Verificar la contraseña
         const isPasswordValid = await bcrypt.compare(password, auth.password);
         if (!isPasswordValid) {
-            return sendResponse(res, 401, 'Credenciales inválidas: Contraseña incorrecta');
+            return sendResponse(res, 401, 'Credenciales inválidas: Contraseña incorrecta', null, false);
         }
 
         // Generar token JWT
@@ -36,8 +36,8 @@ exports.loginUser = async (req, res) => {
             { expiresIn: '24h' }
         );
 
-        // Respuesta con token y datos del usuario
-        sendResponse(res, 200, 'Login exitoso', {
+        // Respuesta con token y datos del usuario dentro de 'result'
+        const result = {
             token,
             user: {
                 id: auth.user._id,
@@ -48,9 +48,11 @@ exports.loginUser = async (req, res) => {
                 birthDate: auth.user.birthDate,
                 fk_location: auth.user.fk_location
             }
-        });
+        };
+
+        sendResponse(res, 200, 'Login exitoso', result, true);
     } catch (error) {
         console.error('Error en login:', error);
-        sendResponse(res, 500, 'Error en el servidor al intentar iniciar sesión');
+        sendResponse(res, 500, 'Error en el servidor al intentar iniciar sesión', null, false);
     }
 };

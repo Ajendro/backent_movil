@@ -1,9 +1,10 @@
 const mongoose = require('mongoose');
 const User = require('../models/userModel');
-const Location = require('../models/locationModel'); 
+const Location = require('../models/locationModel');
 const { sendResponse } = require('../services/respuesta');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
+const nodemailer = require('nodemailer');
 const Authentication = require('../models/authenticationModel');
 const cloudinary = require('../config/cloudinary');
 
@@ -18,24 +19,48 @@ const uploadImageToCloudinary = async (imagePath) => {
     }
 };
 
+// Configuración de Nodemailer
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+    },
+});
+
+// Objeto para almacenar códigos de verificación
+const verificationCodeStore = {};
+console.log(verificationCodeStore)
+
+// Generar un código de verificación aleatorio
+const generateVerificationCode = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
 // Crear Usuario
 exports.createUser = async (req, res) => {
-    try {
-        const { 
-            username, 
-            firstName, 
-            lastName, 
-            birthDate, 
-            email, 
-            password, 
-            gender, 
-            main_street, 
-            secondary_street, 
-            fk_city, 
-            fk_province 
-        } = req.body;
+    const { 
+        username, 
+        firstName, 
+        lastName, 
+        birthDate, 
+        email, 
+        password, 
+        gender, 
+        main_street, 
+        secondary_street, 
+        fk_city, 
+        fk_province 
+    } = req.body;
 
-        let profilePictureUrl = null;
+    let profilePictureUrl = null;
+
+    try {
+        // Verificar si ya existe un usuario con ese email
+        const existingUser = await Authentication.findOne({ email });
+        if (existingUser) {
+            return sendResponse(res, 400, 'El correo electrónico ya está registrado.', null, false);
+        }
 
         // Verificar si hay imagen en la solicitud
         if (req.file) {
@@ -72,16 +97,34 @@ exports.createUser = async (req, res) => {
         const newAuth = new Authentication({
             email,
             password: hashedPassword,
-            user: savedUser._id
+            user: savedUser._id,
+            isVerified: false // Inicialmente no verificado
         });
 
         await newAuth.save();
 
+        // Generar un código de verificación y almacenarlo en memoria con expiración
+        const verificationCode = generateVerificationCode();
+        const expiresAt = Date.now() + 3600000;  // Expiración en 1 hora
+        verificationCodeStore[email] = { code: verificationCode, expiresAt };
+        console.log('Código de verificación almacenado:', verificationCodeStore[email]);
+
+        // Configuración del correo
+        const mailOptions = {
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Verificación de cuenta',
+            text: `Tu código de verificación es: ${verificationCode}. Este código expirará en una hora.`,
+        };
+
+        // Enviar el correo con el código de verificación
+        await transporter.sendMail(mailOptions);
+
         // Responder con éxito
-        return sendResponse(res, 201, 'Usuario creado exitosamente', { idTransaction: savedUser._id });
+        return sendResponse(res, 201, 'Usuario creado y correo enviado con el código de verificación.', { idTransaction: savedUser._id }, true);
     } catch (error) {
         console.error('Error al registrar usuario:', error);
-        sendResponse(res, 500, 'Error al registrar usuario');
+        return sendResponse(res, 500, 'Error al registrar usuario', null, false);
     }
 };
 
@@ -89,10 +132,10 @@ exports.createUser = async (req, res) => {
 exports.getUsers = async (req, res) => {
     try {
         const users = await User.find().populate('fk_location');
-        sendResponse(res, 200, 'Usuarios obtenidos exitosamente', { users });
+        return sendResponse(res, 200, 'Usuarios obtenidos exitosamente', { users }, true);
     } catch (error) {
         console.error('Error al obtener usuarios:', error);
-        sendResponse(res, 500, 'Error al obtener usuarios');
+        return sendResponse(res, 500, 'Error al obtener usuarios', null, false);
     }
 };
 
@@ -101,12 +144,12 @@ exports.getUserById = async (req, res) => {
     try {
         const user = await User.findById(req.params.id).populate('fk_location');
         if (!user) {
-            return sendResponse(res, 404, 'Usuario no encontrado', null);
+            return sendResponse(res, 404, 'Usuario no encontrado', null, false);
         }
-        sendResponse(res, 200, 'Usuario encontrado', { user });
+        return sendResponse(res, 200, 'Usuario encontrado', { user }, true);
     } catch (error) {
         console.error('Error al obtener usuario:', error);
-        sendResponse(res, 500, 'Error al obtener usuario');
+        return sendResponse(res, 500, 'Error al obtener usuario', null, false);
     }
 };
 
@@ -123,7 +166,7 @@ exports.updateUser = async (req, res) => {
 
         // Actualizar localización si se envía
         const user = await User.findById(req.params.id);
-        if (!user) return sendResponse(res, 404, 'Usuario no encontrado');
+        if (!user) return sendResponse(res, 404, 'Usuario no encontrado', null, false);
 
         const locationId = user.fk_location;
         const updatedLocation = await Location.findByIdAndUpdate(locationId, {
@@ -145,24 +188,66 @@ exports.updateUser = async (req, res) => {
 
         const updatedUser = await User.findByIdAndUpdate(req.params.id, updateUser, { new: true }).populate('fk_location');
 
-        sendResponse(res, 200, 'Usuario actualizado exitosamente', { updatedUser });
+        return sendResponse(res, 200, 'Usuario actualizado exitosamente', { updatedUser }, true);
     } catch (error) {
         console.error('Error al actualizar usuario:', error);
-        sendResponse(res, 500, 'Error al actualizar usuario');
+        return sendResponse(res, 500, 'Error al actualizar usuario', null, false);
     }
 };
 
 exports.deleteUser = async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
-        if (!user) return sendResponse(res, 404, 'Usuario no encontrado');
+        if (!user) return sendResponse(res, 404, 'Usuario no encontrado', null, false);
         await Location.findByIdAndDelete(user.fk_location);
         await Authentication.findOneAndDelete({ user: req.params.id });
         await User.findByIdAndDelete(req.params.id);
 
-        sendResponse(res, 200, 'Usuario eliminado exitosamente', { idTransaction: req.params.id });
+        return sendResponse(res, 200, 'Usuario eliminado exitosamente', { idTransaction: req.params.id }, true);
     } catch (error) {
         console.error('Error al eliminar usuario:', error);
-        sendResponse(res, 500, 'Error al eliminar usuario');
+        return sendResponse(res, 500, 'Error al eliminar usuario', null, false);
+    }
+};
+
+exports.verifyAccount = async (req, res) => {
+    const { email, verificationCode } = req.body;
+
+    try {
+        // Buscar el código de verificación almacenado en memoria
+        const storedData = verificationCodeStore[email];
+        console.log('Datos almacenados del código de verificación para', email, storedData);
+
+        if (!storedData) {
+            return sendResponse(res, 400, 'Código de verificación no encontrado o expirado.', null, false);
+        }
+
+        // Comprobar si el código coincide
+        if (storedData.code !== verificationCode) {
+            return sendResponse(res, 400, 'Código de verificación incorrecto.', null, false);
+        }
+
+        // Comprobar si el código ha expirado
+        if (storedData.expiresAt < Date.now()) {
+            return sendResponse(res, 400, 'El código de verificación ha expirado.', null, false);
+        }
+
+        // Verificar que el usuario exista en la base de datos
+        const authentication = await Authentication.findOne({ email });
+        if (!authentication) {
+            return sendResponse(res, 400, 'Usuario no encontrado.', null, false);
+        }
+
+        // Marcar la cuenta como verificada
+        authentication.isVerified = true;
+        await authentication.save();
+
+        // Eliminar el código de verificación de la memoria
+        delete verificationCodeStore[email];
+
+        return sendResponse(res, 200, 'Cuenta verificada con éxito.', null, true);
+    } catch (error) {
+        console.error('Error al verificar la cuenta:', error);
+        return sendResponse(res, 500, 'Error al verificar la cuenta.', null, false);
     }
 };

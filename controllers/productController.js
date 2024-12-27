@@ -24,7 +24,7 @@ exports.createProduct = async (req, res) => {
         }
 
         if (!fk_user) {
-            return sendResponse(res, 400, 'ID de usuario no proporcionado', null, false);
+            return sendResponse(res, 400, false, 'ID de usuario no proporcionado', null);
         }
 
         const newProduct = new Product({
@@ -37,9 +37,9 @@ exports.createProduct = async (req, res) => {
         });
 
         await newProduct.save();
-        return sendResponse(res, 201, 'Producto creado exitosamente', { idTransaction: newProduct._id }, true);
+        return sendResponse(res, 201, true, 'Producto creado exitosamente', { idTransaction: newProduct._id });
     } catch (error) {
-        return sendResponse(res, 500, 'No se pudo crear el producto: Error interno del servidor', null, false);
+        return sendResponse(res, 500, false, 'No se pudo crear el producto: Error interno del servidor', null);
     }
 };
 
@@ -49,9 +49,9 @@ exports.getProducts = async (req, res) => {
         const { fk_category_product } = req.query;
         const filter = fk_category_product ? { fk_category_product } : {};
         const products = await Product.find(filter);
-        return sendResponse(res, 200, 'Productos obtenidos exitosamente', { products }, true);
+        return sendResponse(res, 200, true, 'Productos obtenidos exitosamente', { products });
     } catch (error) {
-        return sendResponse(res, 500, 'Error al obtener productos', null, false);
+        return sendResponse(res, 500, false, 'Error al obtener productos', null);
     }
 };
 
@@ -60,11 +60,11 @@ exports.getProductById = async (req, res) => {
     try {
         const product = await Product.findById(req.params.id);
         if (!product) {
-            return sendResponse(res, 404, 'Producto no encontrado', null, false);
+            return sendResponse(res, 404, false, 'Producto no encontrado', null);
         }
-        return sendResponse(res, 200, 'Producto encontrado exitosamente', { product }, true);
+        return sendResponse(res, 200, true, 'Producto encontrado exitosamente', { product });
     } catch (error) {
-        return sendResponse(res, 500, 'Error al obtener producto por ID', null, false);
+        return sendResponse(res, 500, false, 'Error al obtener producto por ID', null);
     }
 };
 
@@ -81,11 +81,11 @@ exports.updateProduct = async (req, res) => {
 
         const updatedProduct = await Product.findByIdAndUpdate(id, updateData, { new: true });
         if (!updatedProduct) {
-            return sendResponse(res, 404, 'Producto no encontrado', null, false);
+            return sendResponse(res, 404, false, 'Producto no encontrado', null);
         }
-        return sendResponse(res, 200, 'Producto actualizado exitosamente', { product: updatedProduct }, true);
+        return sendResponse(res, 200, true, 'Producto actualizado exitosamente', { product: updatedProduct });
     } catch (error) {
-        return sendResponse(res, 500, 'No se pudo actualizar el producto: Error interno del servidor', null, false);
+        return sendResponse(res, 500, false, 'No se pudo actualizar el producto: Error interno del servidor', null);
     }
 };
 
@@ -94,44 +94,37 @@ exports.deleteProduct = async (req, res) => {
     try {
         const deletedProduct = await Product.findByIdAndDelete(req.params.id);
         if (!deletedProduct) {
-            return sendResponse(res, 404, 'Producto no encontrado', null, false);
+            return sendResponse(res, 404, false, 'Producto no encontrado', null);
         }
-        return sendResponse(res, 200, 'Producto eliminado exitosamente', { idTransaction: deletedProduct._id }, true);
+        return sendResponse(res, 200, true, 'Producto eliminado exitosamente', { idTransaction: deletedProduct._id });
     } catch (error) {
-        return sendResponse(res, 500, 'No se pudo eliminar el producto: Error interno del servidor', null, false);
+        return sendResponse(res, 500, false, 'No se pudo eliminar el producto: Error interno del servidor', null);
     }
 };
 
+// Obtener productos por ID de usuario
 exports.getProductsByUserId = async (req, res) => {
     try {
         const { id } = req.params;
 
         // Verificar que el userId es válido
         if (!id) {
-            return sendResponse(res, 400, 'ID de usuario no proporcionado', null, false);
+            return sendResponse(res, 400, false, 'ID de usuario no proporcionado', null);
         }
 
         // Convertir userId a ObjectId usando 'new'
         const userObjectId = new mongoose.Types.ObjectId(id);
 
-        // Log para verificar el valor de userId
-        console.log('Buscando productos para el usuario con ID:', userObjectId);
-
         // Buscar los productos que corresponden al usuario
         const products = await Product.find({ fk_user: userObjectId });
 
-        // Verificar si hay productos
-        console.log('Productos encontrados:', products);
-
         if (products.length === 0) {
-            return sendResponse(res, 200, 'No se encontraron productos para este usuario', { products }, true);
+            return sendResponse(res, 200, true, 'No se encontraron productos para este usuario', { products });
         }
 
-        return sendResponse(res, 200, 'Productos obtenidos por ID de usuario', { products }, true);
+        return sendResponse(res, 200, true, 'Productos obtenidos por ID de usuario', { products });
     } catch (error) {
         console.error('Error al obtener productos por ID de usuario:', error);
-        return sendResponse(res, 500, 'Error al obtener productos por ID de usuario', null, false);
+        return sendResponse(res, 500, false, 'Error al obtener productos por ID de usuario', null);
     }
 };
-
-

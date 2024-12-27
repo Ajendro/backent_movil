@@ -8,11 +8,11 @@ exports.createLocation = async (req, res) => {
         const { main_street, secondary_street, fk_city, fk_province } = req.body;
 
         if (!main_street || !secondary_street || !fk_city || !fk_province) {
-            return sendResponse(res, 400, 'Todos los campos son requeridos', null, false);
+            return sendResponse(res, 400, false, 'Todos los campos son requeridos', null);
         }
 
         if (!mongoose.Types.ObjectId.isValid(fk_city) || !mongoose.Types.ObjectId.isValid(fk_province)) {
-            return sendResponse(res, 400, 'ID de ciudad o provincia inválido', null, false);
+            return sendResponse(res, 400, false, 'ID de ciudad o provincia inválido', null);
         }
 
         const newLocation = new Location({
@@ -23,10 +23,10 @@ exports.createLocation = async (req, res) => {
         });
 
         const location = await newLocation.save();
-        sendResponse(res, 201, 'Ubicación creada exitosamente', { locationId: location._id }, true);
+        sendResponse(res, 201, true, 'Ubicación creada exitosamente', { locationId: location._id });
     } catch (err) {
         console.error('Error creando la ubicación:', err);
-        sendResponse(res, 500, 'Error al crear la ubicación', null, false);
+        sendResponse(res, 500, false, 'Error al crear la ubicación', null);
     }
 };
 
@@ -37,10 +37,10 @@ exports.getLocations = async (req, res) => {
             .populate('fk_city', 'name')
             .populate('fk_province', 'name');
 
-        sendResponse(res, 200, 'Ubicaciones obtenidas exitosamente', { locations }, true);
+        sendResponse(res, 200, true, 'Ubicaciones obtenidas exitosamente', { locations });
     } catch (error) {
         console.error('Error al obtener ubicaciones:', error);
-        sendResponse(res, 500, 'Error al obtener ubicaciones', null, false);
+        sendResponse(res, 500, false, 'Error al obtener ubicaciones', null);
     }
 };
 
@@ -50,7 +50,7 @@ exports.getLocationById = async (req, res) => {
         const { id } = req.params;
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return sendResponse(res, 400, 'ID de ubicación inválido', null, false);
+            return sendResponse(res, 400, false, 'ID de ubicación inválido', null);
         }
 
         const location = await Location.findById(id)
@@ -58,13 +58,13 @@ exports.getLocationById = async (req, res) => {
             .populate('fk_province', 'name');
 
         if (!location) {
-            return sendResponse(res, 404, 'Ubicación no encontrada', null, false);
+            return sendResponse(res, 404, false, 'Ubicación no encontrada', null);
         }
 
-        sendResponse(res, 200, 'Ubicación obtenida exitosamente', { location }, true);
+        sendResponse(res, 200, true, 'Ubicación obtenida exitosamente', { location });
     } catch (error) {
         console.error('Error al obtener ubicación por ID:', error);
-        sendResponse(res, 500, 'Error al obtener ubicación', null, false);
+        sendResponse(res, 500, false, 'Error al obtener ubicación', null);
     }
 };
 
@@ -75,11 +75,11 @@ exports.updateLocation = async (req, res) => {
         const { main_street, secondary_street, fk_city, fk_province } = req.body;
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return sendResponse(res, 400, 'ID de ubicación inválido', null, false);
+            return sendResponse(res, 400, false, 'ID de ubicación inválido', null);
         }
 
         if (!main_street && !secondary_street && !fk_city && !fk_province) {
-            return sendResponse(res, 400, 'Debe proporcionar al menos un campo para actualizar', null, false);
+            return sendResponse(res, 400, false, 'Debe proporcionar al menos un campo para actualizar', null);
         }
 
         const updateData = {};
@@ -93,13 +93,13 @@ exports.updateLocation = async (req, res) => {
             .populate('fk_province', 'name');
 
         if (!updatedLocation) {
-            return sendResponse(res, 404, 'Ubicación no encontrada', null, false);
+            return sendResponse(res, 404, false, 'Ubicación no encontrada', null);
         }
 
-        sendResponse(res, 200, 'Ubicación actualizada exitosamente', { location: updatedLocation }, true);
+        sendResponse(res, 200, true, 'Ubicación actualizada exitosamente', { location: updatedLocation });
     } catch (error) {
         console.error('Error al actualizar ubicación:', error);
-        sendResponse(res, 500, 'Error al actualizar la ubicación', null, false);
+        sendResponse(res, 500, false, 'Error al actualizar la ubicación', null);
     }
 };
 
@@ -109,18 +109,18 @@ exports.deleteLocation = async (req, res) => {
         const { id } = req.params;
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return sendResponse(res, 400, 'ID de ubicación inválido', null, false);
+            return sendResponse(res, 400, false, 'ID de ubicación inválido', null);
         }
 
         const deletedLocation = await Location.findByIdAndDelete(id);
 
         if (!deletedLocation) {
-            return sendResponse(res, 404, 'Ubicación no encontrada', null, false);
+            return sendResponse(res, 404, false, 'Ubicación no encontrada', null);
         }
 
-        sendResponse(res, 200, 'Ubicación eliminada exitosamente', { locationId: deletedLocation._id }, true);
+        sendResponse(res, 200, true, 'Ubicación eliminada exitosamente', { locationId: deletedLocation._id });
     } catch (error) {
         console.error('Error al eliminar ubicación:', error);
-        sendResponse(res, 500, 'Error al eliminar la ubicación', null, false);
+        sendResponse(res, 500, false, 'Error al eliminar la ubicación', null);
     }
 };

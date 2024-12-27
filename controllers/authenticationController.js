@@ -9,19 +9,19 @@ exports.updatePassword = async (req, res) => {
 
     // Verificar que los campos sean proporcionados
     if (!email || !oldPassword || !newPassword) {
-      return sendResponse(res, 400, 'Todos los campos son requeridos');
+      return sendResponse(res, 400, false, 'Todos los campos son requeridos', null);
     }
 
     // Buscar la autenticación por email
     const auth = await Authentication.findOne({ email });
     if (!auth) {
-      return sendResponse(res, 404, 'Autenticación no encontrada');
+      return sendResponse(res, 404, false, 'Autenticación no encontrada', null);
     }
 
     // Verificar si la contraseña anterior es correcta
     const isMatch = await bcrypt.compare(oldPassword, auth.password);
     if (!isMatch) {
-      return sendResponse(res, 400, 'La contraseña anterior es incorrecta');
+      return sendResponse(res, 400, false, 'La contraseña anterior es incorrecta', null);
     }
 
     // Encriptar la nueva contraseña
@@ -31,10 +31,10 @@ exports.updatePassword = async (req, res) => {
     auth.password = hashedNewPassword;
     await auth.save();
 
-    sendResponse(res, 200, 'Contraseña actualizada exitosamente');
+    return sendResponse(res, 200, true, 'Contraseña actualizada exitosamente', null);
   } catch (err) {
     console.error('Error al actualizar la contraseña:', err);
-    sendResponse(res, 500, 'Error al actualizar la contraseña', null, false);
+    return sendResponse(res, 500, false, 'Error al actualizar la contraseña', null);
   }
 };
 
@@ -45,20 +45,20 @@ exports.deleteAuthentication = async (req, res) => {
 
     // Verificar que el email sea proporcionado
     if (!email) {
-      return sendResponse(res, 400, 'El email es requerido');
+      return sendResponse(res, 400, false, 'El email es requerido', null);
     }
 
     // Buscar la autenticación por email
     const auth = await Authentication.findOne({ email });
     if (!auth) {
-      return sendResponse(res, 404, 'Autenticación no encontrada');
+      return sendResponse(res, 404, false, 'Autenticación no encontrada', null);
     }
 
     // Eliminar la autenticación
     await Authentication.findOneAndDelete({ email });
-    sendResponse(res, 200, 'Autenticación eliminada exitosamente');
+    return sendResponse(res, 200, true, 'Autenticación eliminada exitosamente', null);
   } catch (err) {
     console.error('Error al eliminar autenticación:', err);
-    sendResponse(res, 500, 'Error al eliminar autenticación', null, false);
+    return sendResponse(res, 500, false, 'Error al eliminar autenticación', null);
   }
 };

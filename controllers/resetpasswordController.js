@@ -2,6 +2,8 @@ require('dotenv').config();
 const nodemailer = require('nodemailer');
 const bcrypt = require('bcryptjs');
 const Authentication = require('../models/authenticationModel');
+const { sendResponse } = require('../services/respuesta');
+
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -9,64 +11,76 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS,
   },
 });
+
 const verificationCodes = {}; 
+
 const generateVerificationCode = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
+
+// Enviar correo para restablecer contraseña
 const forgotPassword = async (req, res) => {
   const { email } = req.body;
 
   try {
     const authentication = await Authentication.findOne({ email });
     if (!authentication) {
-      return res.status(400).json({ ok: false, message: 'Usuario no encontrado.' });
+      return sendResponse(res, 400, false, 'Usuario no encontrado.', null);
     }
 
     const verificationCode = generateVerificationCode();
     const expiresAt = Date.now() + 3600000;
     verificationCodes[email] = { code: verificationCode, expiresAt };
+
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
       subject: 'Restablecimiento de contraseña',
       text: `Tu código de verificación es: ${verificationCode}. Este código expirará en una hora.`,
     };
+
     await transporter.sendMail(mailOptions);
-    res.status(200).json({ ok: true, message: 'Correo enviado con el código de verificación.' });
+
+    return sendResponse(res, 200, true, 'Correo enviado con el código de verificación.', null);
   } catch (error) {
     console.error('Error al enviar el correo:', error);
-    res.status(500).json({ ok: false, message: 'Error al procesar la solicitud.' });
+    return sendResponse(res, 500, false, 'Error al procesar la solicitud.', null);
   }
 };
+
+// Restablecer contraseña
 const resetPassword = async (req, res) => {
   const { email, verificationCode, newPassword } = req.body;
 
   try {
     const authentication = await Authentication.findOne({ email });
     if (!authentication) {
-      return res.status(400).json({ ok: false, message: 'Usuario no encontrado.' });
-    }
-    const storedData = verificationCodes[email];
-    if (!storedData) {
-      return res.status(400).json({ ok: false, message: 'Código de verificación incorrecto.' });
-    }
-    if (storedData.code !== verificationCode) {
-      return res.status(400).json({ ok: false, message: 'Código de verificación incorrecto.' });
+      return sendResponse(res, 400, false, 'Usuario no encontrado.', null);
     }
 
-    // Verificar si el código ha expirado
-    if (storedData.expiresAt < Date.now()) {
-      return res.status(400).json({ ok: false, message: 'El código de verificación ha expirado.' });
+    const storedData = verificationCodes[email];
+    if (!storedData) {
+      return sendResponse(res, 400, false, 'Código de verificación incorrecto.', null);
     }
+
+    if (storedData.code !== verificationCode) {
+      return sendResponse(res, 400, false, 'Código de verificación incorrecto.', null);
+    }
+
+    if (storedData.expiresAt < Date.now()) {
+      return sendResponse(res, 400, false, 'El código de verificación ha expirado.', null);
+    }
+
     const hashedPassword = bcrypt.hashSync(newPassword, 10);
     authentication.password = hashedPassword;
     await authentication.save();
+
     delete verificationCodes[email];
 
-    res.status(200).json({ ok: true, message: 'Contraseña restablecida con éxito.' });
+    return sendResponse(res, 200, true, 'Contraseña restablecida con éxito.', null);
   } catch (error) {
     console.error('Error al restablecer la contraseña:', error);
-    res.status(500).json({ ok: false, message: 'Error al restablecer la contraseña.' });
+    return sendResponse(res, 500, false, 'Error al restablecer la contraseña.', null);
   }
 };
 

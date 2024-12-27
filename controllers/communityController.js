@@ -7,11 +7,11 @@ exports.createCommunity = async (req, res) => {
         const { name, description, fk_user } = req.body;
 
         if (!name || !description || !fk_user) {
-            return sendResponse(res, 400, 'Todos los campos son requeridos', null, false);
+            return sendResponse(res, 400, false, 'Todos los campos son requeridos', null);
         }
 
         if (!mongoose.Types.ObjectId.isValid(fk_user)) {
-            return sendResponse(res, 400, 'ID de usuario inválido', null, false);
+            return sendResponse(res, 400, false, 'ID de usuario inválido', null);
         }
 
         const newCommunity = new Community({
@@ -22,10 +22,10 @@ exports.createCommunity = async (req, res) => {
         });
 
         const communityRecord = await newCommunity.save();
-        return sendResponse(res, 201, 'Comunidad creada exitosamente', { community: communityRecord }, true);
+        return sendResponse(res, 201, true, 'Comunidad creada exitosamente', { community: communityRecord });
     } catch (err) {
         console.error('Error creando la comunidad:', err);
-        return sendResponse(res, 500, 'Error al crear la comunidad', null, false);
+        return sendResponse(res, 500, false, 'Error al crear la comunidad', null);
     }
 };
 
@@ -34,10 +34,10 @@ exports.getCommunities = async (req, res) => {
         const communities = await Community.find()
             .populate('fk_user', 'name');
 
-        return sendResponse(res, 200, 'Comunidades obtenidas exitosamente', { communities, count: communities.length }, true);
+        return sendResponse(res, 200, true, 'Comunidades obtenidas exitosamente', { communities, count: communities.length });
     } catch (error) {
         console.error('Error al obtener comunidades:', error);
-        return sendResponse(res, 500, 'Error al obtener comunidades', null, false);
+        return sendResponse(res, 500, false, 'Error al obtener comunidades', null);
     }
 };
 
@@ -46,20 +46,20 @@ exports.getCommunityById = async (req, res) => {
         const { id } = req.params;
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return sendResponse(res, 400, 'ID de comunidad inválido', null, false);
+            return sendResponse(res, 400, false, 'ID de comunidad inválido', null);
         }
 
         const community = await Community.findById(id)
             .populate('fk_user', 'name');
 
         if (!community) {
-            return sendResponse(res, 404, 'Comunidad no encontrada', null, false);
+            return sendResponse(res, 404, false, 'Comunidad no encontrada', null);
         }
 
-        return sendResponse(res, 200, 'Comunidad obtenida exitosamente', { community }, true);
+        return sendResponse(res, 200, true, 'Comunidad obtenida exitosamente', { community });
     } catch (error) {
         console.error('Error al obtener comunidad por ID:', error);
-        return sendResponse(res, 500, 'Error al obtener comunidad', null, false);
+        return sendResponse(res, 500, false, 'Error al obtener comunidad', null);
     }
 };
 
@@ -69,7 +69,7 @@ exports.updateCommunity = async (req, res) => {
         const { name, description, fk_user } = req.body;
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return sendResponse(res, 400, 'ID de comunidad inválido', null, false);
+            return sendResponse(res, 400, false, 'ID de comunidad inválido', null);
         }
 
         const updateData = {};
@@ -77,7 +77,7 @@ exports.updateCommunity = async (req, res) => {
         if (description) updateData.description = description;
         if (fk_user) {
             if (!mongoose.Types.ObjectId.isValid(fk_user)) {
-                return sendResponse(res, 400, 'ID de usuario inválido', null, false);
+                return sendResponse(res, 400, false, 'ID de usuario inválido', null);
             }
             updateData.fk_user = fk_user;
         }
@@ -92,13 +92,13 @@ exports.updateCommunity = async (req, res) => {
         ).populate('fk_user', 'name');
 
         if (!updatedCommunity) {
-            return sendResponse(res, 404, 'Comunidad no encontrada', null, false);
+            return sendResponse(res, 404, false, 'Comunidad no encontrada', null);
         }
 
-        return sendResponse(res, 200, 'Comunidad actualizada exitosamente', { community: updatedCommunity }, true);
+        return sendResponse(res, 200, true, 'Comunidad actualizada exitosamente', { community: updatedCommunity });
     } catch (error) {
         console.error('Error al actualizar comunidad:', error);
-        return sendResponse(res, 500, 'Error al actualizar la comunidad', null, false);
+        return sendResponse(res, 500, false, 'Error al actualizar la comunidad', null);
     }
 };
 
@@ -107,18 +107,18 @@ exports.deleteCommunity = async (req, res) => {
         const { id } = req.params;
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return sendResponse(res, 400, 'ID de comunidad inválido', null, false);
+            return sendResponse(res, 400, false, 'ID de comunidad inválido', null);
         }
 
         const deletedCommunity = await Community.findByIdAndDelete(id);
 
         if (!deletedCommunity) {
-            return sendResponse(res, 404, 'Comunidad no encontrada', null, false);
+            return sendResponse(res, 404, false, 'Comunidad no encontrada', null);
         }
 
-        return sendResponse(res, 200, 'Comunidad eliminada exitosamente', { community: deletedCommunity }, true);
+        return sendResponse(res, 200, true, 'Comunidad eliminada exitosamente', { community: deletedCommunity });
     } catch (error) {
         console.error('Error al eliminar comunidad:', error);
-        return sendResponse(res, 500, 'Error al eliminar la comunidad', null, false);
+        return sendResponse(res, 500, false, 'Error al eliminar la comunidad', null);
     }
 };
