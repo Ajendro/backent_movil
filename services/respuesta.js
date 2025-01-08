@@ -5,7 +5,7 @@ const sendResponse = (res, statusCode, info, result = null, success = true) => {
     const response = {
         code,      
         result,      
-        info         
+        info
     };
 
     res.status(statusCode).json(response);

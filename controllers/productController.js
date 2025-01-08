@@ -16,32 +16,37 @@ const uploadImageToCloudinary = async (imagePath) => {
 // Crear Producto
 exports.createProduct = async (req, res) => {
     try {
-        const { name, description, price, fk_category_product, fk_user } = req.body;
+        const { name, description, price, fk_category_product } = req.body;
         let imageUrl = null;
 
         if (req.file) {
             imageUrl = await uploadImageToCloudinary(req.file.path);
         }
 
-        if (!fk_user) {
-            return sendResponse(res, 400, false, 'ID de usuario no proporcionado', null);
+        // Asegurarse de que el ID del usuario viene del token decodificado en req.user
+        if (!req.user || !req.user.id) {
+            return sendResponse(res, 401, false, 'Usuario no autenticado', null);
         }
 
+        const fk_user = req.user.id;
+        
         const newProduct = new Product({
             name,
             description,
             price,
             productImage: imageUrl,
             fk_category_product,
-            fk_user 
+            fk_user
         });
 
         await newProduct.save();
-        return sendResponse(res, 201, true, 'Producto creado exitosamente', { idTransaction: newProduct._id });
+        return sendResponse(res, 201, 'Producto creado exitosamente', { newProduct }, true);
     } catch (error) {
+        console.error('Error al crear el producto:', error);
         return sendResponse(res, 500, false, 'No se pudo crear el producto: Error interno del servidor', null);
     }
 };
+
 
 // Obtener Todos los Productos
 exports.getProducts = async (req, res) => {
@@ -49,7 +54,7 @@ exports.getProducts = async (req, res) => {
         const { fk_category_product } = req.query;
         const filter = fk_category_product ? { fk_category_product } : {};
         const products = await Product.find(filter);
-        return sendResponse(res, 200, true, 'Productos obtenidos exitosamente', { products });
+        return sendResponse(res, 200, 'Productos obtenidos exitosamente', { products },true);
     } catch (error) {
         return sendResponse(res, 500, false, 'Error al obtener productos', null);
     }
@@ -62,7 +67,7 @@ exports.getProductById = async (req, res) => {
         if (!product) {
             return sendResponse(res, 404, false, 'Producto no encontrado', null);
         }
-        return sendResponse(res, 200, true, 'Producto encontrado exitosamente', { product });
+        return sendResponse(res, 200, 'Producto encontrado exitosamente', { product }, true);
     } catch (error) {
         return sendResponse(res, 500, false, 'Error al obtener producto por ID', null);
     }
@@ -83,7 +88,7 @@ exports.updateProduct = async (req, res) => {
         if (!updatedProduct) {
             return sendResponse(res, 404, false, 'Producto no encontrado', null);
         }
-        return sendResponse(res, 200, true, 'Producto actualizado exitosamente', { product: updatedProduct });
+        return sendResponse(res, 200, 'Producto actualizado exitosamente', { product: updatedProduct }, true);
     } catch (error) {
         return sendResponse(res, 500, false, 'No se pudo actualizar el producto: Error interno del servidor', null);
     }
@@ -105,15 +110,18 @@ exports.deleteProduct = async (req, res) => {
 // Obtener productos por ID de usuario
 exports.getProductsByUserId = async (req, res) => {
     try {
-        const { id } = req.params;
-
-        // Verificar que el userId es válido
-        if (!id) {
-            return sendResponse(res, 400, false, 'ID de usuario no proporcionado', null);
+        if (!req.user || !req.user.id) {
+            return sendResponse(res, 401, false, 'Usuario no autenticado', null);
         }
 
-        // Convertir userId a ObjectId usando 'new'
-        const userObjectId = new mongoose.Types.ObjectId(id);
+        const userId = req.user.id;
+
+        // Verificar que el userId es un ObjectId válido
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return sendResponse(res, 400, false, 'ID de usuario no válido', null);
+        }
+
+        const userObjectId = new mongoose.Types.ObjectId(userId);
 
         // Buscar los productos que corresponden al usuario
         const products = await Product.find({ fk_user: userObjectId });
@@ -122,7 +130,7 @@ exports.getProductsByUserId = async (req, res) => {
             return sendResponse(res, 200, true, 'No se encontraron productos para este usuario', { products });
         }
 
-        return sendResponse(res, 200, true, 'Productos obtenidos por ID de usuario', { products });
+        return sendResponse(res, 200, 'Productos obtenidos por ID de usuario', { products }, true);
     } catch (error) {
         console.error('Error al obtener productos por ID de usuario:', error);
         return sendResponse(res, 500, false, 'Error al obtener productos por ID de usuario', null);

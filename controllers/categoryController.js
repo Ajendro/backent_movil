@@ -17,7 +17,7 @@ exports.createCategory = async (req, res) => {
         });
         const categoryRecord = await newCategory.save();
 
-        return sendResponse(res, 201, true, 'Categoría creada exitosamente', { category: categoryRecord });
+        return sendResponse(res, 201, 'Categoría creada exitosamente', { category: categoryRecord }, true);
     } catch (err) {
         console.error('Error creando la categoría:', err);
         return sendResponse(res, 500, false, 'Error al crear la categoría', null);
@@ -29,7 +29,7 @@ exports.getCategories = async (req, res) => {
         // Obtener todas las categorías y poblar las categorías padre si las hay
         const categories = await Category.find().populate('category_idcategory');
 
-        return sendResponse(res, 200, true, 'Categorías obtenidas exitosamente', { categories, count: categories.length });
+        return sendResponse(res, 200,'Categorías obtenidas exitosamente', { categories, count: categories.length }, true);
     } catch (error) {
         console.error('Error al obtener categorías:', error);
         return sendResponse(res, 500, false, 'Error al obtener categorías', null);
@@ -52,7 +52,7 @@ exports.getCategoryById = async (req, res) => {
             return sendResponse(res, 404, false, 'Categoría no encontrada', null);
         }
 
-        return sendResponse(res, 200, true, 'Categoría obtenida exitosamente', { category });
+        return sendResponse(res, 200, 'Categoría obtenida exitosamente', { category }, true);
     } catch (error) {
         console.error('Error al obtener categoría por ID:', error);
         return sendResponse(res, 500, false, 'Error al obtener categoría', null);
@@ -93,7 +93,7 @@ exports.updateCategory = async (req, res) => {
             return sendResponse(res, 404, false, 'Categoría no encontrada', null);
         }
 
-        return sendResponse(res, 200, true, 'Categoría actualizada exitosamente', { category: updatedCategory });
+        return sendResponse(res, 200, 'Categoría actualizada exitosamente', { category: updatedCategory }, true);
     } catch (error) {
         console.error('Error al actualizar categoría:', error);
         return sendResponse(res, 500, false, 'Error al actualizar la categoría', null);

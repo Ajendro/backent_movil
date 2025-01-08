@@ -21,9 +21,9 @@ router.post('/auth/delete', authenticationController.deleteAuthentication); // E
 router.post('/create_users', upload.single('profilePicture'), userController.createUser); // Crear un nuevo usuario
 router.post('/login', loginController.loginUser); // Login de usuario
 router.post('/users/all', verifyToken, userController.getUsers); // Obtener todos los usuarios
-router.post('/users/getById', verifyToken, userController.getUserById); // Obtener un usuario por ID
-router.post('/users/update', verifyToken, upload.single('profilePicture'), userController.updateUser); // Actualizar un usuario
-router.post('/users/delete', verifyToken, userController.deleteUser); // Eliminar un usuario por ID
+router.post('/users/getById/:id', verifyToken, userController.getUserById); // Obtener un usuario por ID
+router.post('/users/update/:id', verifyToken, upload.single('profilePicture'), userController.updateUser); // Actualizar un usuario
+router.post('/users/delete/:id', verifyToken, userController.deleteUser); // Eliminar un usuario por ID
 
 // APIs de Producto
 router.post('/productscreate', verifyToken, upload.single('productImage'), productController.createProduct); // Crear un nuevo producto
@@ -35,7 +35,7 @@ router.post('/products/user/:id', verifyToken, productController.getProductsByUs
 
 // APIs de Post
 router.post('/postscreate', verifyToken, upload.single('imageUrl'), postController.createPost); // Crear un nuevo post
-router.post('/posts', postController.getPostsByUserLocation); // Obtener todos los posts según la dirección
+router.post('/posts',verifyToken, postController.getPostsByUserLocation); // Obtener todos los posts según la dirección
 router.post('/post/getById/:id', postController.getPostById); // Obtener un post por ID
 router.post('/posts/update/:id', verifyToken, upload.single('imageUrl'), postController.updatePost); // Actualizar un post por ID
 router.post('/posts/delete/:id', verifyToken, postController.deletePost); // Eliminar un post por ID
@@ -43,7 +43,7 @@ router.post('/posts/user/:id', verifyToken, postController.getPostsByUserId); //
 
 // APIs de Ubicación
 router.post('/create_locations/:id', verifyToken, locationController.createLocation); // Crear una nueva ubicación
-router.post('/locations/all/:id', verifyToken, locationController.getLocations); // Obtener todas las ubicaciones
+router.post('/locations/all', verifyToken, locationController.getLocations); // Obtener todas las ubicaciones
 router.post('/locations/getById/:id', verifyToken, locationController.getLocationById); // Obtener una ubicación por ID
 router.post('/locations/update/:id', verifyToken, locationController.updateLocation); // Actualizar una ubicación por ID
 router.post('/locations/delete/:id', verifyToken, locationController.deleteLocation); // Eliminar una ubicación por ID
@@ -51,9 +51,7 @@ router.post('/locations/delete/:id', verifyToken, locationController.deleteLocat
 // APIs de Likes
 router.post('/create_likes', verifyToken, likeController.createLike); // Crear un nuevo like
 router.post('/likes/all', verifyToken, likeController.getLikes); // Obtener todos los likes
-router.post('/likes/getById/:id', verifyToken, likeController.getLikeById); // Obtener un like por ID
-router.post('/likes/update/:id', verifyToken, likeController.updateLike); // Actualizar un like por ID
-router.post('/likes/delete/:id', verifyToken, likeController.deleteLike); // Eliminar un like por ID
+router.post('/likes/delete', verifyToken, likeController.deleteLike); // Eliminar un like por ID
 router.post('/likes/byPost/:id', verifyToken, likeController.getLikesByPost); // Obtener todos los likes por ID de post
 
 // APIs de Comunidad
@@ -61,7 +59,8 @@ router.post('/create_community', verifyToken, communityController.createCommunit
 router.post('/community_all', verifyToken, communityController.getCommunities); // Obtener todas las comunidades
 router.post('/community/getById/:id', verifyToken, communityController.getCommunityById); // Obtener una comunidad por ID
 router.post('/community/update/:id', verifyToken, communityController.updateCommunity); // Actualizar una comunidad por ID
-router.post('/community/delete/:id', verifyToken, communityController.deleteCommunity); // Eliminar una comunidad por ID
+router.post('/community/delete/:id', verifyToken, communityController.deleteCommunity);// Eliminar una comunidad por ID
+router.post('/user/communities', verifyToken, communityController.getCommunitiesByUser); // Obtener comunidad por ID Usuario
 
 // APIs de Categorías
 router.post('/categories', verifyToken, categoryController.createCategory); // Crear una nueva categoría

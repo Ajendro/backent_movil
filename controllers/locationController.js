@@ -23,7 +23,7 @@ exports.createLocation = async (req, res) => {
         });
 
         const location = await newLocation.save();
-        sendResponse(res, 201, true, 'Ubicación creada exitosamente', { locationId: location._id });
+        sendResponse(res, 201,'Ubicación creada exitosamente', { locationId: location._id }, true);
     } catch (err) {
         console.error('Error creando la ubicación:', err);
         sendResponse(res, 500, false, 'Error al crear la ubicación', null);
@@ -37,7 +37,7 @@ exports.getLocations = async (req, res) => {
             .populate('fk_city', 'name')
             .populate('fk_province', 'name');
 
-        sendResponse(res, 200, true, 'Ubicaciones obtenidas exitosamente', { locations });
+        sendResponse(res, 200, 'Ubicaciones obtenidas exitosamente', { locations }, true);
     } catch (error) {
         console.error('Error al obtener ubicaciones:', error);
         sendResponse(res, 500, false, 'Error al obtener ubicaciones', null);
@@ -61,7 +61,7 @@ exports.getLocationById = async (req, res) => {
             return sendResponse(res, 404, false, 'Ubicación no encontrada', null);
         }
 
-        sendResponse(res, 200, true, 'Ubicación obtenida exitosamente', { location });
+        sendResponse(res, 200,'Ubicación obtenida exitosamente', { location }, true);
     } catch (error) {
         console.error('Error al obtener ubicación por ID:', error);
         sendResponse(res, 500, false, 'Error al obtener ubicación', null);
@@ -96,7 +96,7 @@ exports.updateLocation = async (req, res) => {
             return sendResponse(res, 404, false, 'Ubicación no encontrada', null);
         }
 
-        sendResponse(res, 200, true, 'Ubicación actualizada exitosamente', { location: updatedLocation });
+        sendResponse(res, 200, 'Ubicación actualizada exitosamente', { location: updatedLocation }, true);
     } catch (error) {
         console.error('Error al actualizar ubicación:', error);
         sendResponse(res, 500, false, 'Error al actualizar la ubicación', null);

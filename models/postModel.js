@@ -7,7 +7,7 @@ const postSchema = new Schema({
     imageUrl: { type: String, required: true },
     post_type: { type: String, enum: ['accidente', 'comercio', 'corte_agua', 'recomendacion'], required: true }, 
     post_date: { type: Date, required: true },
-    fk_user: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    fk_user: { type: Schema.Types.ObjectId, ref: 'User'},
     fk_location: { type: Schema.Types.ObjectId, ref: 'Location', required: true }
 });
 

@@ -18,7 +18,8 @@ const verifyToken = (req, res, next) => {
         // Verificar y decodificar el token
         const decoded = jwt.verify(token, JWT_SECRET);
         req.user = decoded; // Los datos del usuario se guardan en req.user
-        next(); // Pasa al siguiente middleware o ruta
+        console.log('Token decodificado:', decoded); // Agregar este log para verificar
+        next(); 
     } catch (error) {
         console.error('Error al verificar el token:', error);
         return sendResponse(res, 401, 'Token inválido o expirado');
