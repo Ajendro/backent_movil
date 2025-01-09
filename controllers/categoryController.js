@@ -5,19 +5,24 @@ const { sendResponse } = require('../services/respuesta');
 exports.createCategory = async (req, res) => {
     try {
         const { name, category_idcategory } = req.body;
-        if (!name || category_idcategory === undefined) {
-            return sendResponse(res, 400, false, 'Todos los campos son requeridos', null);
+
+        if (!name) {
+            return sendResponse(res, 400, false, 'El nombre de la categoría es requerido', null);
         }
+
+        // Validate parent category ID if provided
         if (category_idcategory && !mongoose.Types.ObjectId.isValid(category_idcategory)) {
             return sendResponse(res, 400, false, 'ID de categoría padre inválido', null);
         }
+
         const newCategory = new Category({
             name,
-            category_idcategory
+            category_idcategory: category_idcategory || null
         });
+
         const categoryRecord = await newCategory.save();
 
-        return sendResponse(res, 201, 'Categoría creada exitosamente', { category: categoryRecord }, true);
+        return sendResponse(res, 201, true, 'Categoría creada exitosamente', { category: categoryRecord });
     } catch (err) {
         console.error('Error creando la categoría:', err);
         return sendResponse(res, 500, false, 'Error al crear la categoría', null);
