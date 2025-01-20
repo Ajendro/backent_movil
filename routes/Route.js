@@ -12,6 +12,8 @@ const categoryController = require('../controllers/categoryController');
 const loginController = require('../controllers/loginController');
 const authenticationController = require('../controllers/authenticationController');
 const { forgotPassword, resetPassword} = require('../controllers/resetpasswordController');
+const followerController = require('../controllers/followerController');
+
 
 // APIs de autenticación
 router.post('/auth/update-password', authenticationController.updatePassword); // Actualizar contraseña
@@ -74,5 +76,11 @@ router.post('/create_all', verifyToken, categoryController.createMultipleCategor
 router.post('/forgot-password',forgotPassword); // Solicitar el receteo de contraseña
 router.post('/resetpassword', resetPassword); // Resetear contraseña    
 router.post('/verifyAccount', userController.verifyAccount); // Verificar cuenta del Usuario
+
+// APIs de Seguidores
+router.post('/follow',verifyToken, followerController.followUser); // Seguir a un usuario
+router.post('/unfollow', verifyToken, followerController.unfollowUser); // Dejar de seguir a un usuario
+router.post('/followers', verifyToken, followerController.getFollowers); // Obtener seguidores de un usuario
+router.post('/following', verifyToken, followerController.getFollowing); // Obtener usuarios que sigue un usuario
 
 module.exports = router;
