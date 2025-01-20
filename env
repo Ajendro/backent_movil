@@ -1,0 +1,10 @@
+MONGODB_URI=mongodb+srv://jm2009676:PB8ArqJlD3BWQ3WQ@redsocial.z0d0r.mongodb.net/red_social?retryWrites=true&w=majority&appName=redsocial
+CLOUDINARY_API_NAME=dtrrpyfgn
+CLOUDINARY_API_KEY=285422885934676
+CLOUDINARY_API_SECRET=15AgRQIR40Hu0_m6iFf2iIOEB2I
+JWT_SECRET=s7sfjG9$3d6B@hX28f$2gY2Lp8mZ6xvM
+MAILJET_PUBLIC_KEY=05b631ff4c917c0e70cd81e6b439b5ff
+MAILJET_PRIVATE_KEY=f279a9a744611d6cfb03255a0003e298
+
+EMAIL_USER=merchanjair1@gmail.com
+EMAIL_PASS=abfldccmylhijtkk
