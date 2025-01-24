@@ -1,11 +1,10 @@
 // middleware/verifyToken.js
+require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const { sendResponse } = require('../services/respuesta');
-require('dotenv').config(); 
 
 const JWT_SECRET = process.env.JWT_SECRET;
-console.log("Token", JWT_SECRET)
-
+console.log("token:",JWT_SECRET)
 const verifyToken = (req, res, next) => {
     // Verifica que el token esté en el encabezado de la solicitud
     const token = req.header('Authorization')?.replace('Bearer ', ''); // Extrae el token
