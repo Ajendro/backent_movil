@@ -78,7 +78,6 @@ router.post('/resetpassword', resetPassword); // Resetear contraseña
 router.post('/verifyAccount', userController.verifyAccount); // Verificar cuenta del Usuario
 
 // APIs de Seguidores
-
 router.post('/followers/follow', verifyToken, followerController.followUser);
 router.post('/followers/unfollow', verifyToken, followerController.unfollowUser); // Dejar de seguir a un usuario
 router.post('/followers/:userId', verifyToken, followerController.getFollowers); // Obtener los seguidores de un usuario

@@ -74,7 +74,7 @@ exports.unfollowUser = async (req, res) => {
 // Obtener los seguidores de un usuario
 exports.getFollowers = async (req, res) => {
     try {
-        const { userId } = req.body; // Cambiado de req.params a req.body
+        const { userId } = req.user; // Cambiado de req.params a req.body
 
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             return sendResponse(res, 400, false, 'ID de usuario inválido', null);
@@ -89,6 +89,7 @@ exports.getFollowers = async (req, res) => {
         sendResponse(res, 500, false, 'Error al obtener los seguidores', null);
     }
 };
+
 
 // Obtener los usuarios seguidos por un usuario
 exports.getFollowing = async (req, res) => {
@@ -106,4 +107,4 @@ exports.getFollowing = async (req, res) => {
     } catch (err) {
         console.error('Error al obtener los usuarios seguidos:', err);
         sendResponse(res, 500, false, 'Error al obtener los usuarios seguidos', null);
-    }
+    }}
