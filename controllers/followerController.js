@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const Follower = require('../models/followerModel');
-const User = require('../models/userModel'); 
+const User = require('../models/userModel'); // Asumiendo que tienes un modelo de usuario
 const { sendResponse } = require('../services/respuesta');
 
 // Seguir a un usuario
@@ -45,8 +45,6 @@ exports.followUser = async (req, res) => {
         sendResponse(res, 500, false, 'Error al seguir al usuario', null);
     }
 };
-
-
 
 // Dejar de seguir a un usuario
 exports.unfollowUser = async (req, res) => {
