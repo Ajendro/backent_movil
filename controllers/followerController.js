@@ -1,47 +1,42 @@
 const mongoose = require('mongoose');
 const Follower = require('../models/followerModel');
-const User = require('../models/userModel'); // Asumiendo que tienes un modelo de usuario
 const { sendResponse } = require('../services/respuesta');
 
 // Seguir a un usuario
 exports.followUser = async (req, res) => {
     try {
-        const { fk_followed } = req.body;
+        const { following } = req.body;
 
         if (!req.user || !req.user.id) {
             return sendResponse(res, 401, false, 'Usuario no autenticado', null);
         }
 
-        const fk_user = req.user.id;
+        const follower = req.user.id;
 
-        if (!fk_followed) {
-            return sendResponse(res, 400, false, 'ID del usuario a seguir es requerido', null);
-        }
-
-        if (!mongoose.Types.ObjectId.isValid(fk_user) || !mongoose.Types.ObjectId.isValid(fk_followed)) {
+        if (!mongoose.Types.ObjectId.isValid(follower) || !mongoose.Types.ObjectId.isValid(following)) {
             return sendResponse(res, 400, false, 'ID de usuario inválido', null);
         }
 
-        const existingFollow = await Follower.findOne({ fk_user, fk_followed });
+        if (follower === following) {
+            return sendResponse(res, 400, false, 'No puedes seguirte a ti mismo', null);
+        }
+
+        const existingFollow = await Follower.findOne({ follower, following });
 
         if (existingFollow) {
             return sendResponse(res, 400, false, 'Ya sigues a este usuario', null);
         }
 
-        const newFollow = new Follower({
-            fk_user,
-            fk_followed,
-            follow_date: new Date()
+        const newFollower = new Follower({
+            follower,
+            following
         });
 
-        await newFollow.save();
+        await newFollower.save();
 
-        await User.findByIdAndUpdate(fk_followed, { $inc: { followersCount: 1 } });
-        await User.findByIdAndUpdate(fk_user, { $inc: { followingCount: 1 } });
-
-        sendResponse(res, 201, 'Siguiendo al usuario', { followId: newFollow._id }, true);
+        sendResponse(res, 201, 'Has comenzado a seguir al usuario', { followId: newFollower._id }, true);
     } catch (err) {
-        console.error('Error siguiendo al usuario:', err);
+        console.error('Error al seguir al usuario:', err);
         sendResponse(res, 500, false, 'Error al seguir al usuario', null);
     }
 };
@@ -49,23 +44,19 @@ exports.followUser = async (req, res) => {
 // Dejar de seguir a un usuario
 exports.unfollowUser = async (req, res) => {
     try {
-        const { fk_followed } = req.body;
+        const { following } = req.body;
 
         if (!req.user || !req.user.id) {
             return sendResponse(res, 401, false, 'Usuario no autenticado', null);
         }
 
-        const fk_user = req.user.id;
+        const follower = req.user.id;
 
-        if (!fk_followed) {
-            return sendResponse(res, 400, false, 'ID del usuario a dejar de seguir es requerido', null);
-        }
-
-        if (!mongoose.Types.ObjectId.isValid(fk_user) || !mongoose.Types.ObjectId.isValid(fk_followed)) {
+        if (!mongoose.Types.ObjectId.isValid(follower) || !mongoose.Types.ObjectId.isValid(following)) {
             return sendResponse(res, 400, false, 'ID de usuario inválido', null);
         }
 
-        const followToDelete = await Follower.findOne({ fk_user, fk_followed });
+        const followToDelete = await Follower.findOne({ follower, following });
 
         if (!followToDelete) {
             return sendResponse(res, 404, false, 'No sigues a este usuario', null);
@@ -73,66 +64,47 @@ exports.unfollowUser = async (req, res) => {
 
         await Follower.deleteOne({ _id: followToDelete._id });
 
-        await User.findByIdAndUpdate(fk_followed, { $inc: { followersCount: -1 } });
-        await User.findByIdAndUpdate(fk_user, { $inc: { followingCount: -1 } });
-
-        sendResponse(res, 200, 'Dejaste de seguir al usuario', null, true);
+        sendResponse(res, 200, 'Has dejado de seguir al usuario', null, true);
     } catch (err) {
         console.error('Error al dejar de seguir al usuario:', err);
         sendResponse(res, 500, false, 'Error al dejar de seguir al usuario', null);
     }
 };
 
-// Obtener seguidores de un usuario
+// Obtener los seguidores de un usuario
 exports.getFollowers = async (req, res) => {
     try {
-        const { fk_user } = req.body;
+        const { userId } = req.body; // Cambiado de req.params a req.body
 
-        if (!req.user || !req.user.id) {
-            return sendResponse(res, 401, false, 'Usuario no autenticado', null);
-        }
-
-        if (!fk_user) {
-            return sendResponse(res, 400, false, 'ID del usuario es requerido', null);
-        }
-
-        if (!mongoose.Types.ObjectId.isValid(fk_user)) {
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
             return sendResponse(res, 400, false, 'ID de usuario inválido', null);
         }
 
-        const followers = await Follower.find({ fk_followed: fk_user })
-            .populate('fk_user', 'name');
+        const followers = await Follower.find({ following: userId })
+            .populate('follower', 'name');
 
-        sendResponse(res, 200, 'Seguidores obtenidos', { followers }, true);
+        sendResponse(res, 200, 'Seguidores obtenidos exitosamente', { followers }, true);
     } catch (err) {
-        console.error('Error al obtener seguidores:', err);
-        sendResponse(res, 500, false, 'Error al obtener seguidores', null);
+        console.error('Error al obtener los seguidores:', err);
+        sendResponse(res, 500, false, 'Error al obtener los seguidores', null);
     }
 };
 
-// Obtener usuarios que sigue un usuario
+// Obtener los usuarios seguidos por un usuario
 exports.getFollowing = async (req, res) => {
     try {
-        const { fk_user } = req.body;
+        const { userId } = req.body; // Cambiado de req.params a req.body
 
-        if (!req.user || !req.user.id) {
-            return sendResponse(res, 401, false, 'Usuario no autenticado', null);
-        }
-
-        if (!fk_user) {
-            return sendResponse(res, 400, false, 'ID del usuario es requerido', null);
-        }
-
-        if (!mongoose.Types.ObjectId.isValid(fk_user)) {
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
             return sendResponse(res, 400, false, 'ID de usuario inválido', null);
         }
 
-        const following = await Follower.find({ fk_user: fk_user })
-            .populate('fk_followed', 'name');
+        const following = await Follower.find({ follower: userId })
+            .populate('following', 'name');
 
-        sendResponse(res, 200, 'Usuarios que sigue obtenidos', { following }, true);
+        sendResponse(res, 200, 'Usuarios seguidos obtenidos exitosamente', { following }, true);
     } catch (err) {
-        console.error('Error al obtener usuarios que sigue:', err);
-        sendResponse(res, 500, false, 'Error al obtener usuarios que sigue', null);
+        console.error('Error al obtener los usuarios seguidos:', err);
+        sendResponse(res, 500, false, 'Error al obtener los usuarios seguidos', null);
     }
 };
