@@ -74,7 +74,7 @@ exports.unfollowUser = async (req, res) => {
 // Obtener los seguidores de un usuario
 exports.getFollowers = async (req, res) => {
     try {
-        const { userId } = req.user; // Cambiado de req.params a req.body
+        const { userId } = req.body; // Cambiado de req.params a req.body
 
         if (!mongoose.Types.ObjectId.isValid(userId)) {
             return sendResponse(res, 400, false, 'ID de usuario inválido', null);
