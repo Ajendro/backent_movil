@@ -90,6 +90,7 @@ exports.getFollowers = async (req, res) => {
     }
 };
 
+
 // Obtener los usuarios seguidos por un usuario
 exports.getFollowing = async (req, res) => {
     try {
@@ -106,5 +107,4 @@ exports.getFollowing = async (req, res) => {
     } catch (err) {
         console.error('Error al obtener los usuarios seguidos:', err);
         sendResponse(res, 500, false, 'Error al obtener los usuarios seguidos', null);
-    }
-};
+    }}
