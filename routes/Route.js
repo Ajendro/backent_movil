@@ -13,6 +13,8 @@ const loginController = require('../controllers/loginController');
 const authenticationController = require('../controllers/authenticationController');
 const { forgotPassword, resetPassword} = require('../controllers/resetpasswordController');
 const followerController = require('../controllers/followerController');
+const notificationController = require('../services/notifications');
+
 
 
 // APIs de autenticación
@@ -83,5 +85,13 @@ router.post('/followers/follow', verifyToken, followerController.followUser);
 router.post('/followers/unfollow', verifyToken, followerController.unfollowUser); // Dejar de seguir a un usuario
 router.post('/followers/:userId', verifyToken, followerController.getFollowers); // Obtener los seguidores de un usuario
 router.post('/following/:userId', verifyToken, followerController.getFollowing); // Obtener los usuarios que sigue un usuario
+
+
+// Ruta para notificar cuando se publica un nuevo post
+router.post('/notification/post', verifyToken, notificationController.notifyNewPost);
+// Ruta para notificar cuando alguien da like a un post
+router.post('/notification/like', verifyToken, notificationController.notifyNewLike);
+// Ruta para notificar cuando alguien sigue a un usuario
+router.post('/notification/follow', verifyToken, notificationController.notifyNewFollower);
 
 module.exports = router;

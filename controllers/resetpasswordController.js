@@ -72,7 +72,8 @@ const resetPassword = async (req, res) => {
     }
 
     const hashedPassword = bcrypt.hashSync(newPassword, 10);
-    authentication.password = hashedPassword;
+    authent
+    ication.password = hashedPassword;
     await authentication.save();
 
     delete verificationCodes[email];
