@@ -82,7 +82,7 @@ exports.getPostsByUserLocation = async (req, res) => {
             })
             .populate({
                 path: 'fk_user',
-                select: 'name email'
+                select: 'username profilePicture firstName lastName birthDate gender'
             });
             console.log('Publicaciones obtenidas:', posts);
 
