@@ -15,8 +15,11 @@ const uploadImageToCloudinary = async (imagePath) => {
 
 // Crear Publicación
 exports.createPost = async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     try {
-        const { name, description, post_type, post_date, fk_location } = req.body;
+        const { name, description, post_type, post_date, main_street, secondary_street, fk_city, fk_province } = req.body;
         let imageUrl = null;
 
         // Verificar si se adjunta una imagen
@@ -24,18 +27,26 @@ exports.createPost = async (req, res) => {
             imageUrl = await uploadImageToCloudinary(req.file.path);
         }
 
-        // Asegurarse de que el ID del usuario viene del token decodificado en req.user
+        // Verificar autenticación del usuario
         if (!req.user || !req.user.id) {
+            await session.abortTransaction();
+            session.endSession();
             return sendResponse(res, 401, false, 'Usuario no autenticado', null);
         }
 
         const fk_user = req.user.id;
 
-        // Verificar que fk_location está presente
-        if (!fk_location) {
-            return sendResponse(res, 400, false, 'Ubicación no proporcionada', null);
-        }
+        // Crear la ubicación
+        const newLocation = new Location({
+            main_street,
+            secondary_street,
+            fk_city,
+            fk_province
+        });
 
+        const savedLocation = await newLocation.save({ session });
+
+        // Crear la publicación
         const newPost = new Post({
             name,
             description,
@@ -43,16 +54,25 @@ exports.createPost = async (req, res) => {
             post_date,
             imageUrl,
             fk_user,
-            fk_location
+            fk_location: savedLocation._id
         });
 
-        await newPost.save();
+        await newPost.save({ session });
+
+        // Confirmar transacción
+        await session.commitTransaction();
+        session.endSession();
+
         return sendResponse(res, 201, 'Publicación creada exitosamente', { newPost }, true);
     } catch (error) {
+        await session.abortTransaction();
+        session.endSession();
+
         console.error('Error al crear la publicación:', error);
         return sendResponse(res, 500, false, 'No se pudo crear la publicación: Error interno del servidor', null);
     }
 };
+
 
 
 // Obtener Publicaciones por Ubicación del Usuario
