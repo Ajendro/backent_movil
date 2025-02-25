@@ -4,7 +4,7 @@ const Schema = mongoose.Schema;
 const postSchema = new Schema({
     name: { type: String, required: true },
     description: { type: String, required: true },
-    imageUrl: { type: String, required: true },
+    imageUrl: { type: String,},
     post_type: { type: String, enum: ['accidente', 'comercio', 'corte_agua', 'recomendacion'], required: true }, 
     post_date: { type: Date, required: true },
     fk_user: { type: Schema.Types.ObjectId, ref: 'User'},
