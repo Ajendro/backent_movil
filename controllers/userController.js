@@ -142,7 +142,7 @@ exports.getUsers = async (req, res) => {
 // Obtener usuario por ID
 exports.getUserById = async (req, res) => {
     try {
-        const user = await User.findById(req.params.id).populate('fk_location');
+        const user = await User.findById(req.body.id).populate('fk_location');
         if (!user) {
             return sendResponse(res, 404, 'Usuario no encontrado', null, false);
         }
