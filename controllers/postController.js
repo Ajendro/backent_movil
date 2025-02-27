@@ -77,7 +77,6 @@ exports.createPost = async (req, res) => {
 };
 
 
-
 exports.getPostsByUserLocation = async (req, res) => {
     try {
         console.log("req.user:", req.user);  
@@ -89,37 +88,33 @@ exports.getPostsByUserLocation = async (req, res) => {
 
         const user = await User.findById(id).populate('fk_location');
         if (!user) {
-            return sendResponse(res, 404, false, 'Usuario no encontrado', null);
+            return sendResponse(res, 404, 'Usuario no encontrado', null);
         }
 
         const userLocation = user.fk_location;
-        if (!userLocation) {
-            return sendResponse(res, 400, false, 'El usuario no tiene una dirección asociada', null);
+        if (!userLocation || !userLocation.fk_city || !userLocation.fk_province) {
+            return sendResponse(res, 400, 'El usuario no tiene una dirección asociada correctamente', null);
         }
 
         const { fk_city, fk_province } = userLocation;
         console.log('Buscando publicaciones en la ciudad:', fk_city, 'y provincia:', fk_province);
 
-        const posts = await Post.find({
-            $or: [
-                { 'fk_location.fk_city': fk_city },
-                { 'fk_location.fk_province': fk_province }
-            ]
-        })
-        .populate({
-            path: 'fk_location',
-            select: 'main_street secondary_street fk_city fk_province'
-        })
-        .populate({
-            path: 'fk_user',
-            select: 'username profilePicture firstName lastName birthDate gender'
-        });
+        // Obtener todas las publicaciones con su ubicación y usuario
+        const posts = await Post.find()
+            .populate('fk_location')
+            .populate('fk_user');
 
-        console.log('Publicaciones obtenidas:', posts);
-        return sendResponse(res, 200, 'Publicaciones obtenidas exitosamente', { posts }, true);
+        // Filtrar manualmente las publicaciones por ciudad o provincia
+        const filteredPosts = posts.filter(post => 
+            post.fk_location?.fk_city?.toString() === fk_city.toString() ||
+            post.fk_location?.fk_province?.toString() === fk_province.toString()
+        );
+
+        console.log('Publicaciones obtenidas:', filteredPosts);
+        return sendResponse(res, 200, 'Publicaciones obtenidas exitosamente', { posts: filteredPosts }, true);
     } catch (error) {
         console.error('Error al obtener publicaciones por ubicación del usuario:', error);
-        return sendResponse(res, 500, false, 'Error interno del servidor', null);
+        return sendResponse(res, 500, 'Error interno del servidor', null);
     }
 };
 
