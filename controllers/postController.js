@@ -3,6 +3,9 @@ const User = require('../models/userModel');
 const cloudinary = require('../config/cloudinary');
 const mongoose = require('mongoose');
 const { sendResponse } = require('../services/respuesta');
+const Location = require('../models/locationModel'); // Ajusta la ruta según tu estructura
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 const uploadImageToCloudinary = async (imagePath) => {
     try {
