@@ -137,7 +137,7 @@ exports.getPostById = async (req, res) => {
 // Actualizar Publicación
 exports.updatePost = async (req, res) => {
     try {
-        const { id } = req.params;
+        const { id } = req.body;
         let updateData = req.body;
 
         if (req.file) {
