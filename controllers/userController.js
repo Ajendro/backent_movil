@@ -128,7 +128,7 @@ exports.createUser = async (req, res) => {
     }
 };
 
-// Obtener todos los usuarios
+
 exports.getUsers = async (req, res) => {
     try {
         const users = await User.find().populate('fk_location');
