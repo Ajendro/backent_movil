@@ -174,7 +174,7 @@ exports.deletePost = async (req, res) => {
 exports.getPostsByUserId = async (req, res) => {
     try {
         // Usar el ID del usuario desde req.user
-        const { id } = req.user;
+        const id = req.user?.id;
 
         if (!id) {
             return sendResponse(res, 400, false, 'ID de usuario no proporcionado', null);
