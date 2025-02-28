@@ -82,6 +82,7 @@ exports.getPostsByUserLocation = async (req, res) => {
         console.log("req.user:", req.user);  
 
         const id = req.user?.id;  
+
         if (!id) {
             return sendResponse(res, 400, 'No se pudo obtener el ID del usuario desde el token', null);
         }

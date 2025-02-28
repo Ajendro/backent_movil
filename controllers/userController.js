@@ -153,10 +153,16 @@ exports.getUserById = async (req, res) => {
     }
 };
 
+
 // Actualizar Usuario
 exports.updateUser = async (req, res) => {
     try {
-        const { username, firstName, lastName, birthDate, gender, main_street, secondary_street, fk_city, fk_province } = req.body;
+        const { id, username, firstName, lastName, birthDate, gender, main_street, secondary_street, fk_city, fk_province } = req.body;
+
+        // Verificar que se haya proporcionado el ID
+        if (!id) {
+            return sendResponse(res, 400, 'ID de usuario es requerido', null, false);
+        }
 
         // Actualizar imagen si existe
         let profilePictureUrl = null;
@@ -164,8 +170,8 @@ exports.updateUser = async (req, res) => {
             profilePictureUrl = await uploadImageToCloudinary(req.file.path);
         }
 
-        // Actualizar localización si se envía
-        const user = await User.findById(req.params.id);
+        // Buscar el usuario
+        const user = await User.findById(id);
         if (!user) return sendResponse(res, 404, 'Usuario no encontrado', null, false);
 
         const locationId = user.fk_location;
@@ -186,7 +192,7 @@ exports.updateUser = async (req, res) => {
             profilePicture: profilePictureUrl || user.profilePicture
         };
 
-        const updatedUser = await User.findByIdAndUpdate(req.params.id, updateUser, { new: true }).populate('fk_location');
+        const updatedUser = await User.findByIdAndUpdate(id, updateUser, { new: true }).populate('fk_location');
 
         return sendResponse(res, 200, 'Usuario actualizado exitosamente', { updatedUser }, true);
     } catch (error) {
