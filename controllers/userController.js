@@ -157,7 +157,8 @@ exports.getUserById = async (req, res) => {
 // Actualizar Usuario
 exports.updateUser = async (req, res) => {
     try {
-        const { id, username, firstName, lastName, birthDate, gender, main_street, secondary_street, fk_city, fk_province } = req.body;
+        const { username, firstName, lastName, birthDate, gender, main_street, secondary_street, fk_city, fk_province } = req.body;
+        const id = req.user.id;
 
         // Verificar que se haya proporcionado el ID
         if (!id) {
