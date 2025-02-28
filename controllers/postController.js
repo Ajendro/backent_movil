@@ -156,7 +156,6 @@ exports.updatePost = async (req, res) => {
     }
 };
 
-// Eliminar Publicación
 exports.deletePost = async (req, res) => {
     try {
         const deletedPost = await Post.findByIdAndDelete(req.body.id);
