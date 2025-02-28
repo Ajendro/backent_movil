@@ -159,7 +159,7 @@ exports.updatePost = async (req, res) => {
 // Eliminar Publicación
 exports.deletePost = async (req, res) => {
     try {
-        const deletedPost = await Post.findByIdAndDelete(req.params.id);
+        const deletedPost = await Post.findByIdAndDelete(req.body.id);
         if (!deletedPost) {
             return sendResponse(res, 404, false, 'Publicación no encontrada', null);
         }
